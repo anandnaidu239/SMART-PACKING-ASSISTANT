@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PackWise AI - Smart Packing Assistant</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #4CAF50;
+  --secondary: #2E7D32;
+  --accent: #FF9800;
+  --light: #f8f9fa;
+  --dark: #212529;
+  --success: #8BC34A;
+  --warning: #FFC107;
+  --background: #f8f9fa;
+  --text: #212529;
+  --card-bg: #ffffff;
+  --shadow: 0 2px 15px rgba(0,0,0,0.1);
+  --hero-gradient: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
+}
+
+/* Enhanced Chatbot Styles */
+.chatbot-container {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1000;
+}
+
+.chatbot-icon {
+  width: 70px;
+  height: 70px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  cursor: pointer;
+  box-shadow: 0 5px 25px rgba(76, 175, 80, 0.3);
+  transition: all 0.3s ease;
+  animation: pulse 2s infinite;
+  border: 3px solid white;
+}
+
+.chatbot-icon:hover {
+  transform: scale(1.1);
+  background: var(--accent);
+  box-shadow: 0 8px 30px rgba(255, 152, 0, 0.4);
+}
+
+.chatbot-window {
+  position: absolute;
+  bottom: 90px;
+  right: 0;
+  width: 380px;
+  height: 550px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  border: 2px solid var(--primary);
+}
+
+.chatbot-window.active {
+  display: flex;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.chatbot-header {
+  padding: 1.2rem;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.close-chatbot {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.close-chatbot:hover {
+  transform: scale(1.2);
+}
+
+.chatbot-messages {
+  flex: 1;
+  padding: 1.2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: var(--background);
+}
+
+.message {
+  max-width: 85%;
+  padding: 0.9rem 1.2rem;
+  border-radius: 18px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.bot-message {
+  background: var(--light);
+  color: var(--dark);
+  align-self: flex-start;
+  border-bottom-left-radius: 5px;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.user-message {
+  background: var(--primary);
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 5px;
+}
+
+.chatbot-input-container {
+  display: flex;
+  padding: 1rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  background: var(--card-bg);
+}
+
+.chatbot-input {
+  flex: 1;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  outline: none;
+  font-family: 'Poppins', sans-serif;
+  background: var(--light);
+  color: var(--dark);
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+.chatbot-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.send-chatbot-message {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 1.1rem;
+}
+
+.send-chatbot-message:hover {
+  background: var(--accent);
+  transform: scale(1.1);
+}
+
+/* Special formatting for packing lists */
+.essentials-highlight {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.clothing-highlight {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.weather-info {
+  font-weight: 600;
+  color: var(--secondary);
+}
+
+.packing-tip {
+  background: rgba(139, 195, 74, 0.1);
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  display: inline-block;
+  margin: 0.3rem 0;
+  border-left: 3px solid var(--success);
+}
+
+/* Packing list items */
+.packing-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: rgba(76, 175, 80, 0.05);
+}
+
+.packing-item i {
+  margin-right: 0.8rem;
+  color: var(--primary);
+}
+
+/* Typing indicator animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.typing-indicator span {
+  animation: blink 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.dark-mode {
+  --primary: #8BC34A;
+  --secondary: #689F38;
+  --accent: #FFC107;
+  --light: #212529;
+  --dark: #f8f9fa;
+  --background: #121212;
+  --text: #f8f9fa;
+  --card-bg: #1e1e1e;
+  --shadow: 0 2px 15px rgba(0,0,0,0.3);
+  --hero-gradient: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  color: var(--text);
+  line-height: 1.6;
+  background-color: var(--background);
+  overflow-x: hidden;
+}
+
+/* Header Styles */
+header {
+  background-color: var(--card-bg);
+  box-shadow: var(--shadow);
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 5%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.logo i {
+  margin-right: 10px;
+  color: var(--accent);
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+}
+
+.nav-links li {
+  margin-left: 2rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-links a:hover {
+  color: var(--primary);
+}
+
+.nav-links a:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  bottom: -5px;
+  left: 0;
+  transition: width 0.3s;
+}
+
+.nav-links a:hover:after {
+  width: 100%;
+}
+
+.auth-buttons .btn {
+  padding: 0.7rem 1.5rem;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-outline {
+  border: 2px solid var(--primary);
+  color: var(--primary);
+}
+
+.btn-outline:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-solid {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-solid:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-left: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover {
+  transform: rotate(30deg);
+}
+
+/* Hero Section */
+.hero {
+  padding: 10rem 5% 5rem;
+  background: var(--hero-gradient);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.hero-content {
+  flex: 1;
+  padding-right: 3rem;
+  z-index: 2;
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeInUp 1s ease;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 2.5rem;
+  max-width: 600px;
+  color: var(--text);
+  opacity: 0.8;
+  animation: fadeInUp 1s ease 0.2s forwards;
+  opacity: 0;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1.5rem;
+  animation: fadeInUp 1s ease 0.4s forwards;
+  opacity: 0;
+}
+
+.hero-buttons .btn {
+  padding: 1rem 2rem;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+}
+
+.btn-accent:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+.hero-image {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  animation: fadeInRight 1s ease;
+}
+
+.hero-image img {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.search-box {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  margin-top: 3rem;
+  max-width: 900px;
+  animation: fadeInUp 1s ease 0.6s forwards;
+  opacity: 0;
+}
+
+.search-box h3 {
+  margin-bottom: 1.5rem;
+  color: var(--primary);
+}
+
+.search-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.form-group {
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.3s;
+  background-color: var(--light);
+  color: var(--dark);
+}
+
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.search-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  align-self: flex-end;
+}
+
+.search-btn:hover {
+  background: var(--secondary);
+  transform: translateY(-2px);
+}
+
+/* Features Section */
+.features {
+  padding: 6rem 5%;
+  background: var(--card-bg);
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.section-header h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.section-header p {
+  color: var(--text);
+  opacity: 0.8;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background: var(--light);
+  padding: 2rem;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}
+
+.feature-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  color: white;
+  font-size: 1.8rem;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+  transform: rotate(15deg) scale(1.1);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.feature-card h3 {
+  margin-bottom: 1rem;
+  color: var(--dark);
+}
+
+.feature-card p {
+  color: var(--dark);
+  opacity: 0.8;
+}
+
+/* Why Choose Us Section */
+.why-choose-us {
+  padding: 6rem 5%;
+  background: var(--light);
+}
+
+.benefits-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.benefit-card {
+  flex: 1 1 300px;
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.benefit-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.benefit-icon {
+  font-size: 2.5rem;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+}
+
+.benefit-card h3 {
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.benefit-card p {
+  color: var(--text);
+  opacity: 0.8;
+}
+
+/* How It Works */
+.how-it-works {
+  padding: 6rem 5%;
+  background: linear-gradient(135deg, var(--light) 0%, var(--background) 100%);
+}
+
+.steps {
+  display: flex;
+  justify-content: space-between;
+  max-width: 1000px;
+  margin: 3rem auto 0;
+  position: relative;
+}
+
+.step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.step:hover {
+  transform: scale(1.05);
+}
+
+.step-number {
+  width: 60px;
+  height: 60px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 auto 1.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.step:hover .step-number {
+  transform: rotate(360deg);
+  background: var(--accent);
+}
+
+.step:not(:last-child):after {
+  content: '';
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  width: 100%;
+  height: 3px;
+  background: var(--primary);
+  opacity: 0.3;
+  z-index: -1;
+}
+
+.step h3 {
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.step p {
+  color: var(--text);
+  opacity: 0.8;
+  max-width: 250px;
+  margin: 0 auto;
+}
+
+/* Testimonials */
+.testimonials {
+  padding: 6rem 5%;
+  background: var(--card-bg);
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 3rem auto 0;
+}
+
+.testimonial-card {
+  background: var(--light);
+  padding: 2rem;
+  border-radius: 15px;
+  position: relative;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}
+
+.testimonial-card:before {
+  content: '"';
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 5rem;
+  color: rgba(76, 175, 80, 0.1);
+  font-family: serif;
+  line-height: 1;
+}
+
+.testimonial-content {
+  margin-bottom: 1.5rem;
+  color: var(--dark);
+  font-style: italic;
+  position: relative;
+  z-index: 1;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+}
+
+.author-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 1rem;
+  border: 3px solid var(--primary);
+}
+
+.author-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.author-info h4 {
+  color: var(--dark);
+  margin-bottom: 0.2rem;
+}
+
+.author-info p {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+/* Packing Results */
+.packing-results {
+  display: none;
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  margin-top: 2rem;
+  max-width: 900px;
+  animation: fadeInUp 0.5s ease;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.results-header h3 {
+  color: var(--primary);
+}
+
+.weather-forecast {
+  height: 200px;
+  background: var(--light);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.weather-forecast::before {
+  content: 'Weather Forecast';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 0.8rem;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.weather-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.weather-temp {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.weather-desc {
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.packing-tips {
+  background: rgba(139, 195, 74, 0.1);
+  padding: 1rem;
+  border-radius: 10px;
+  border-left: 4px solid var(--success);
+  margin-bottom: 1.5rem;
+}
+
+.packing-categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.packing-category {
+  background: var(--light);
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+.packing-category h4 {
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.packing-category h4 i {
+  margin-right: 0.5rem;
+}
+
+.packing-category ul {
+  list-style: none;
+}
+
+.packing-category li {
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+}
+
+.packing-category li i {
+  margin-right: 0.5rem;
+  color: var(--primary);
+  font-size: 0.8rem;
+}
+
+/* CTA Section */
+.cta {
+  padding: 6rem 5%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta:before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+  animation: pulse 8s infinite linear;
+  z-index: 1;
+}
+
+@keyframes pulse {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.cta-content {
+  position: relative;
+  z-index: 2;
+}
+
+.cta h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.cta p {
+  max-width: 700px;
+  margin: 0 auto 2.5rem;
+  opacity: 0.9;
+}
+
+.cta .btn {
+  padding: 1rem 2.5rem;
+  background: white;
+  color: var(--primary);
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: inline-block;
+  text-decoration: none;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta .btn:after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 200%;
+  height: 200%;
+  background: rgba(255,255,255,0.2);
+  transform: rotate(30deg);
+  transition: all 0.3s;
+}
+
+.cta .btn:hover:after {
+  left: 100%;
+}
+
+.cta .btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* Footer */
+footer {
+  background: var(--dark);
+  color: white;
+  padding: 5rem 5% 2rem;
+}
+
+.footer-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 3rem;
+}
+
+.footer-col h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.footer-col h3:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 40px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.footer-col ul {
+  list-style: none;
+}
+
+.footer-col ul li {
+  margin-bottom: 0.8rem;
+}
+
+.footer-col ul li a {
+  color: #adb5bd;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.footer-col ul li a:hover {
+  color: white;
+  padding-left: 5px;
+}
+
+.footer-about p {
+  color: #adb5bd;
+  margin-bottom: 1.5rem;
+}
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.social-links a {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all 0.3s;
+}
+
+.social-links a:hover {
+  background: var(--accent);
+  transform: translateY(-3px);
+}
+
+.footer-auth-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.footer-auth-buttons .btn {
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.copyright {
+  text-align: center;
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  color: #adb5bd;
+  font-size: 0.9rem;
+}
+
+/* Loading Animation */
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .hero-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .hero-content {
+    padding-right: 0;
+    margin-bottom: 3rem;
+  }
+  .hero h1 {
+    font-size: 2.8rem;
+  }
+  .hero-buttons {
+    justify-content: center;
+  }
+  .steps {
+    flex-direction: column;
+    gap: 3rem;
+  }
+  .step:not(:last-child):after {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    padding: 1rem 5%;
+  }
+  .nav-links {
+    margin: 1.5rem 0;
+  }
+  .hero {
+    padding-top: 8rem;
+  }
+  .hero h1 {
+    font-size: 2.2rem;
+  }
+  .section-header h2 {
+    font-size: 2rem;
+  }
+  .chatbot-window {
+    width: 300px;
+    height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .search-form {
+    grid-template-columns: 1fr;
+  }
+  .chatbot-window {
+    width: 280px;
+    right: -20px;
+  }
+  .footer-auth-buttons {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+
+<body>
+<!-- Enhanced Chatbot Container -->
+<div class="chatbot-container">
+  <div class="chatbot-icon" id="chatbotIcon">
+    <i class="fas fa-suitcase"></i>
+  </div>
+  <div class="chatbot-window" id="chatbotWindow">
+    <div class="chatbot-header">
+      <h3>🧳 Smart Packing</h3>
+      <button class="close-chatbot" id="closeChatbot">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="chatbot-messages" id="chatbotMessages">
+      <div class="message bot-message">
+        <p>Hello! 👋 I'm your <strong>Smart Packing</strong>.</p>
+        <p>I can help you:</p>
+        <ul style="margin-left: 1.2rem; margin-top: 0.5rem;">
+          <li>Create personalized packing lists 🧳</li>
+          <li>Suggest items based on weather 🌦️</li>
+          <li>Recommend essentials for your trip type ✈️🏖️</li>
+          <li>Answer packing-related questions ❓</li>
+        </ul>
+        <p>Where are you traveling to?</p>
+      </div>
+    </div>
+    <div class="chatbot-input-container">
+      <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Tell me about your trip (e.g., 'Beach vacation to Bali next month')">
+      <button class="send-chatbot-message" id="sendChatbotMessage">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="navbar">
+    <a href="#" class="logo">
+      <i class="fas fa-suitcase"></i>
+      Smart Packing
+    </a>
+    <ul class="nav-links">
+      <li><a href="#" class="active">Home</a></li>
+      <li><a href="#">Features</a></li>
+      <li><a href="#">How It Works</a></li>
+      <li><a href="#">Pricing</a></li>
+      <li><a href="#">About</a></li>
+    </ul>
+    <div class="auth-buttons">
+      <!-- <a href="#" class="btn btn-outline">Login</a>
+      <a href="#" class="btn btn-solid">Sign Up</a> -->
+      <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-container">
+    <div class="hero-content">
+      <h1>Never Forget an Essential Item Again</h1>
+      <p>Our smart AI analyzes your destination, weather, and trip details to create the perfect packing list tailored just for you.</p>
+      <div class="hero-buttons">
+        <a href="#" class="btn btn-accent">Create Packing List</a>
+        <a href="#" class="btn btn-outline">How It Works</a>
+      </div>
+    </div>
+    <div class="hero-image">
+      <img src="https://i.natgeofe.com/n/041d6cb6-e89d-404f-87f0-87d57234c31b/GettyImages-1279395386.jpg" alt="Smart packing with AI">
+    </div>
+  </div>
+
+  <!-- Packing List Search Box -->
+  <div class="search-box">
+    <h3>Create Your Perfect Packing List</h3>
+    <form class="search-form" id="packingSearchForm">
+      <div class="form-group">
+        <label for="destination">Destination</label>
+        <input type="text" id="destination" placeholder="City or Country" required>
+      </div>
+      <div class="form-group">
+        <label for="tripDates">Trip Dates</label>
+        <input type="text" id="tripDates" placeholder="MM/DD/YYYY - MM/DD/YYYY" required>
+      </div>
+      <div class="form-group">
+        <label for="tripType">Trip Type</label>
+        <select id="tripType" required>
+          <option value="">Select trip type</option>
+          <option value="business">Business</option>
+          <option value="vacation">Vacation</option>
+          <option value="backpacking">Backpacking</option>
+          <option value="family">Family</option>
+          <option value="romantic">Romantic Getaway</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="activities">Activities</label>
+        <input type="text" id="activities" placeholder="Hiking, swimming, etc.">
+      </div>
+      <button type="submit" class="search-btn">
+        <i class="fas fa-suitcase"></i> Generate List
+      </button>
+    </form>
+  </div>
+
+  <!-- Packing List Results -->
+  <div class="packing-results" id="packingResults">
+    <div class="results-header">
+      <h3>Your Personalized Packing List</h3>
+      <span id="tripInfo">Bali, Indonesia • June 15-30, 2023 • Beach Vacation</span>
+    </div>
+    <div class="weather-forecast" id="weatherForecast">
+      <i class="fas fa-sun weather-icon"></i>
+      <div class="weather-temp">82°F</div>
+      <div class="weather-desc">Sunny with occasional showers</div>
+    </div>
+    <div class="packing-tips" id="packingTips">
+      <strong>Packing Tip:</strong> Bring quick-dry clothing and waterproof bags for your electronics. Don't forget reef-safe sunscreen!
+    </div>
+    <div class="packing-categories">
+      <div class="packing-category">
+        <h4><i class="fas fa-tshirt"></i> Clothing</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> 5 lightweight shirts</li>
+          <li><i class="fas fa-check"></i> 3 pairs shorts</li>
+          <li><i class="fas fa-check"></i> 1 swimsuit</li>
+          <li><i class="fas fa-check"></i> 1 light jacket</li>
+          <li><i class="fas fa-check"></i> 1 sun hat</li>
+        </ul>
+      </div>
+      <div class="packing-category">
+        <h4><i class="fas fa-toothbrush"></i> Toiletries</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> Reef-safe sunscreen</li>
+          <li><i class="fas fa-check"></i> Insect repellent</li>
+          <li><i class="fas fa-check"></i> Travel-sized toiletries</li>
+          <li><i class="fas fa-check"></i> First aid kit</li>
+        </ul>
+      </div>
+      <div class="packing-category">
+        <h4><i class="fas fa-laptop"></i> Electronics</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> Phone + charger</li>
+          <li><i class="fas fa-check"></i> Waterproof phone case</li>
+          <li><i class="fas fa-check"></i> Power adapter</li>
+          <li><i class="fas fa-check"></i> Portable charger</li>
+        </ul>
+      </div>
+      <div class="packing-category">
+        <h4><i class="fas fa-passport"></i> Essentials</h4>
+        <ul>
+          <li><i class="fas fa-check"></i> Passport</li>
+          <li><i class="fas fa-check"></i> Travel insurance</li>
+          <li><i class="fas fa-check"></i> Credit cards/cash</li>
+          <li><i class="fas fa-check"></i> Copies of documents</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+  <div class="section-header">
+    <h2>Why Choose PackWise AI?</h2>
+    <p>Our smart technology combines weather data, destination insights, and travel expertise to create the perfect packing list.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">
+        <i class="fas fa-cloud-sun"></i>
+      </div>
+      <h3>Weather-Aware</h3>
+      <p>We analyze weather forecasts for your destination and dates to recommend appropriate clothing and gear.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <i class="fas fa-route"></i>
+      </div>
+      <h3>Destination-Specific</h3>
+      <p>Get recommendations based on local customs, voltage, and other destination-specific factors.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <i class="fas fa-user-tie"></i>
+      </div>
+      <h3>Trip-Type Optimized</h3>
+      <p>Different lists for business trips, family vacations, backpacking adventures, and more.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <i class="fas fa-robot"></i>
+      </div>
+      <h3>AI-Powered</h3>
+      <p>Powered by Gemini AI for smart suggestions and natural language explanations.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="why-choose-us">
+  <div class="section-header">
+    <!-- <h2>Why You Should Choose Us</h2>
+    <p>We're revolutionizing the way people pack for trips with cutting-edge technology and travel expertise.</p>
+  </div>
+  <div class="benefits-container">
+    <div class="benefit-card">
+      <div class="benefit-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h3>Never Forget Essentials</h3>
+      <p>Our comprehensive lists ensure you never arrive without important items.</p>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">
+        <i class="fas fa-suitcase-rolling"></i>
+      </div>
+      <h3>Pack Lighter</h3>
+      <p>We help you avoid overpacking by suggesting only what you'll actually need.</p>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <h3>Save Time</h3>
+      <p>No more last-minute packing stress - get your list ready in minutes.</p>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">
+        <i class="fas fa-globe"></i>
+      </div>
+      <h3>Global Coverage</h3>
+      <p>We have packing recommendations for destinations all around the world.</p>
+    </div>
+  </div> -->
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works">
+  <div class="section-header">
+    <!-- <h2>How PackWise AI Works</h2>
+    <p>Getting the perfect packing list has never been easier with our simple three-step process.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-number">1</div>
+      <h3>Enter Your Trip Details</h3>
+      <p>Tell us where you're going, when, and what type of trip you're taking.</p>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <h3>AI Analyzes Your Needs</h3>
+      <p>Our system processes weather, destination info, and activities to determine what you'll need.</p>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <h3>Get Your Packing List</h3>
+      <p>Receive a comprehensive, personalized packing list you can customize.</p>
+    </div>
+  </div>
+</section> -->
+
+<!-- Testimonials -->
+<section class="testimonials">
+  <div class="section-header">
+    <!-- <h2>What Our Users Say</h2>
+    <p>Thousands of travelers trust PackWise AI to help them pack perfectly.</p>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="testimonial-content">
+        PackWise saved my business trip! I would have forgotten my power adapter and presentation materials without their list.
+      </div>
+      <div class="testimonial-author">
+        <div class="author-avatar">
+          <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Sarah J.">
+        </div>
+        <div class="author-info">
+          <h4>Sarah Johnson</h4>
+          <p>Business Consultant</p>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-content">
+        Our family vacation was so much smoother thanks to PackWise. The kids had everything they needed, and we didn't overpack!
+      </div>
+      <div class="testimonial-author">
+        <div class="author-avatar">
+          <img src="https://randomuser.me/api/portraits/men/45.jpg" alt="Michael T.">
+        </div>
+        <div class="author-info">
+          <h4>Michael Thompson</h4>
+          <p>Family Traveler</p>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-content">
+        As a frequent traveler, I use PackWise for every trip. It's saved me from countless "I forgot..." moments at my destination.
+      </div>
+      <div class="testimonial-author">
+        <div class="author-avatar">
+          <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Lisa M.">
+        </div>
+        <div class="author-info">
+          <h4>Lisa Martinez</h4>
+          <p>Digital Nomad</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- CTA Section -->
+<section class="cta">
+  <div class="cta-content">
+    <h2>Ready to Pack Smarter?</h2>
+    <p>Join thousands of smart travelers who never forget essential items again.</p>
+    <a href="#" class="btn">Create Your Packing List</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<!-- <footer>
+  <div class="footer-container">
+    <div class="footer-col footer-about">
+      <h3>PackWise AI</h3>
+      <p>Using artificial intelligence to help travelers pack perfectly for every trip.</p>
+      <div class="footer-auth-buttons"> -->
+        <!-- <a href="#" class="btn btn-outline">Login</a>
+        <a href="#" class="btn btn-solid">Sign Up</a> -->
+      <!-- </div>
+      <div class="social-links">
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h3>Product</h3>
+      <ul>
+        <li><a href="#">Features</a></li>
+        <li><a href="#">Pricing</a></li>
+        <li><a href="#">API</a></li>
+        <li><a href="#">Integrations</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h3>Company</h3>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Press</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h3>Support</h3>
+      <ul>
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="copyright">
+    <p>&copy; 2023 PackWise AI. All rights reserved.</p>
+  </div>
+</footer> -->
+
+<!-- JavaScript -->
+<script>
+// Theme Toggle
+const themeToggle = document.getElementById('themeToggle');
+const body = document.body;
+const savedTheme = localStorage.getItem('theme') || 
+  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+if (savedTheme === 'dark') {
+  body.classList.add('dark-mode');
+  themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+}
+
+themeToggle.addEventListener('click', () => {
+  body.classList.toggle('dark-mode');
+  const isDark = body.classList.contains('dark-mode');
+  themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+});
+
+// Chatbot Implementation with Gemini AI
+const chatbotIcon = document.getElementById("chatbotIcon");
+const chatbotWindow = document.getElementById("chatbotWindow");
+const closeChatbot = document.getElementById("closeChatbot");
+const chatbotInput = document.getElementById("chatbotInput");
+const sendChatbotMessage = document.getElementById("sendChatbotMessage");
+const chatbotMessages = document.getElementById("chatbotMessages");
+
+// Google Gemini API configuration
+const GOOGLE_API_KEY = 'AIzaSyDudnt6l_RVPTuwnnj0VqrtLq8WVDewrMY';
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
+
+// Chatbot state
+let conversationHistory = [
+  {
+    role: "model",
+    parts: [{ text: "Hello! I'm your PackWise AI assistant. I can help you create personalized packing lists based on your destination, travel dates, and trip type. Where are you traveling to?" }]
+  }
+];
+
+// Toggle chatbot window
+chatbotIcon.addEventListener('click', () => {
+  chatbotWindow.classList.toggle('active');
+});
+
+closeChatbot.addEventListener('click', () => {
+  chatbotWindow.classList.remove('active');
+});
+
+// Send message function
+async function sendMessage() {
+  const message = chatbotInput.value.trim();
+  if (!message) return;
+
+  // Add user message to UI
+  addMessage(message, 'user');
+  chatbotInput.value = '';
+
+  // Show typing indicator
+  const typingIndicator = document.createElement('div');
+  typingIndicator.className = 'message bot-message';
+  typingIndicator.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
+  chatbotMessages.appendChild(typingIndicator);
+  chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+
+  try {
+    // Add user message to conversation history
+    conversationHistory.push({
+      role: "user",
+      parts: [{ text: message }]
+    });
+
+    // Call Gemini API
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: conversationHistory,
+        generationConfig: {
+          temperature: 0.9,
+          topK: 1,
+          topP: 1,
+          maxOutputTokens: 2048,
+          stopSequences: []
+        },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    if (data.candidates && data.candidates[0].content.parts[0].text) {
+      const botResponse = data.candidates[0].content.parts[0].text;
+      
+      // Remove typing indicator
+      chatbotMessages.removeChild(typingIndicator);
+      
+      // Add bot response to UI and history
+      addMessage(botResponse, 'bot');
+      conversationHistory.push({
+        role: "model",
+        parts: [{ text: botResponse }]
+      });
+    } else {
+      throw new Error("Invalid response from Gemini API");
+    }
+  } catch (error) {
+    console.error("Error calling Gemini API:", error);
+    chatbotMessages.removeChild(typingIndicator);
+    addMessage("Sorry, I'm having trouble connecting to the AI service. Please try again later.", 'bot');
+  }
+}
+
+// Helper function to add messages to the chat UI
+function addMessage(text, sender) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${sender}-message`;
+  
+  // Check if the message contains packing list items and format them
+  if (text.includes("Packing list:")) {
+    const parts = text.split("Packing list:");
+    messageDiv.innerHTML = parts[0] + '<div class="packing-tip">Packing list:</div>';
+    
+    const listItems = parts[1].split('\n').filter(item => item.trim() !== '');
+    const list = document.createElement('ul');
+    list.style.marginLeft = '1.2rem';
+    list.style.marginTop = '0.5rem';
+    
+    listItems.forEach(item => {
+      if (item.trim()) {
+        const li = document.createElement('li');
+        li.innerHTML = `<i class="fas fa-suitcase" style="margin-right: 0.5rem;"></i>${item.trim()}`;
+        list.appendChild(li);
+      }
+    });
+    
+    messageDiv.appendChild(list);
+  } else {
+    messageDiv.textContent = text;
+  }
+  
+  chatbotMessages.appendChild(messageDiv);
+  chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+}
+
+// Event listeners for sending messages
+sendChatbotMessage.addEventListener('click', sendMessage);
+chatbotInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
+
+// Packing List Form Handling
+document.getElementById('packingSearchForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const destination = document.getElementById('destination').value.trim();
+  const tripDates = document.getElementById('tripDates').value.trim();
+  const tripType = document.getElementById('tripType').value;
+  const activities = document.getElementById('activities').value.trim();
+  
+  if (!destination || !tripDates || !tripType) {
+    alert('Please fill in all required fields');
+    return;
+  }
+  
+  const searchBtn = this.querySelector('button[type="submit"]');
+  const originalBtnText = searchBtn.innerHTML;
+  searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+  searchBtn.disabled = true;
+  
+  // Sample packing data for demonstration
+  const samplePackingData = {
+    "Bali": {
+      weather: {
+        icon: "fa-sun",
+        temp: "82°F",
+        desc: "Sunny with occasional showers"
+      },
+      tips: "Bring quick-dry clothing and waterproof bags for your electronics. Don't forget reef-safe sunscreen!",
+      clothing: [
+        "5 lightweight shirts",
+        "3 pairs shorts",
+        "1 swimsuit",
+        "1 light jacket",
+        "1 sun hat"
+      ],
+      toiletries: [
+        "Reef-safe sunscreen",
+        "Insect repellent",
+        "Travel-sized toiletries",
+        "First aid kit"
+      ],
+      electronics: [
+        "Phone + charger",
+        "Waterproof phone case",
+        "Power adapter",
+        "Portable charger"
+      ],
+      essentials: [
+        "Passport",
+        "Travel insurance",
+        "Credit cards/cash",
+        "Copies of documents"
+      ]
+    },
+    "Tokyo": {
+      weather: {
+        icon: "fa-cloud",
+        temp: "65°F",
+        desc: "Mild with chance of rain"
+      },
+      tips: "Pack layers as temperatures can vary. Bring comfortable walking shoes and a compact umbrella.",
+      clothing: [
+        "3-4 light layers",
+        "1 jacket",
+        "2 pairs comfortable shoes",
+        "1 compact umbrella"
+      ],
+      toiletries: [
+        "Moisturizer",
+        "Lip balm",
+        "Travel-sized toiletries",
+        "Hand sanitizer"
+      ],
+      electronics: [
+        "Phone + charger",
+        "Portable WiFi device",
+        "Power adapter",
+        "Camera"
+      ],
+      essentials: [
+        "Passport",
+        "Printed itinerary",
+        "JR Pass (if applicable)",
+        "Phrasebook or translation app"
+      ]
+    },
+    "New York": {
+      weather: {
+        icon: "fa-snowflake",
+        temp: "32°F",
+        desc: "Cold with possible snow"
+      },
+      tips: "Pack warm layers including thermal underwear. Don't forget gloves, a scarf, and a warm hat.",
+      clothing: [
+        "Thermal underwear",
+        "Warm sweater",
+        "Winter coat",
+        "Gloves and scarf",
+        "Warm boots"
+      ],
+      toiletries: [
+        "Moisturizer",
+        "Lip balm",
+        "Hand warmers",
+        "Travel-sized toiletries"
+      ],
+      electronics: [
+        "Phone + charger",
+        "Portable charger",
+        "Headphones",
+        "Camera"
+      ],
+      essentials: [
+        "ID/Passport",
+        "MetroCard",
+        "Credit cards/cash",
+        "Printed hotel reservation"
+      ]
+    }
+  };
+  
+  setTimeout(() => {
+    try {
+      let packingData;
+      
+      if (samplePackingData[destination]) {
+        packingData = samplePackingData[destination];
+      } else {
+        // Generate random data for demo purposes
+        const weatherOptions = [
+          { icon: "fa-sun", temp: "75-85°F", desc: "Sunny and warm" },
+          { icon: "fa-cloud", temp: "60-70°F", desc: "Partly cloudy" },
+          { icon: "fa-cloud-rain", temp: "55-65°F", desc: "Rainy" },
+          { icon: "fa-snowflake", temp: "30-40°F", desc: "Cold with possible snow" }
+        ];
+        
+        const randomWeather = weatherOptions[Math.floor(Math.random() * weatherOptions.length)];
+        
+        packingData = {
+          weather: {
+            icon: randomWeather.icon,
+            temp: randomWeather.temp,
+            desc: randomWeather.desc
+          },
+          tips: "Remember to pack appropriate clothing for the weather and activities you have planned.",
+          clothing: [
+            "3-5 tops",
+            "2-3 bottoms",
+            "1 jacket/sweater",
+            "Comfortable shoes",
+            "Sleepwear"
+          ],
+          toiletries: [
+            "Toothbrush/toothpaste",
+            "Shampoo/conditioner",
+            "Deodorant",
+            "First aid kit"
+          ],
+          electronics: [
+            "Phone + charger",
+            "Power adapter",
+            "Headphones",
+            "Camera (optional)"
+          ],
+          essentials: [
+            "Passport/ID",
+            "Travel documents",
+            "Credit cards/cash",
+            "Medications"
+          ]
+        };
+      }
+      
+      // Update UI with packing results
+      document.getElementById('tripInfo').textContent = `${destination} • ${tripDates} • ${tripType.charAt(0).toUpperCase() + tripType.slice(1)}`;
+      
+      const weatherIcon = document.querySelector('.weather-icon');
+      weatherIcon.className = `fas ${packingData.weather.icon} weather-icon`;
+      document.querySelector('.weather-temp').textContent = packingData.weather.temp;
+      document.querySelector('.weather-desc').textContent = packingData.weather.desc;
+      
+      document.getElementById('packingTips').innerHTML = `<strong>Packing Tip:</strong> ${packingData.tips}`;
+      
+      // Update packing categories
+      document.querySelectorAll('.packing-category ul')[0].innerHTML = 
+        packingData.clothing.map(item => `<li><i class="fas fa-check"></i> ${item}</li>`).join('');
+      
+      document.querySelectorAll('.packing-category ul')[1].innerHTML = 
+        packingData.toiletries.map(item => `<li><i class="fas fa-check"></i> ${item}</li>`).join('');
+      
+      document.querySelectorAll('.packing-category ul')[2].innerHTML = 
+        packingData.electronics.map(item => `<li><i class="fas fa-check"></i> ${item}</li>`).join('');
+      
+      document.querySelectorAll('.packing-category ul')[3].innerHTML = 
+        packingData.essentials.map(item => `<li><i class="fas fa-check"></i> ${item}</li>`).join('');
+      
+      document.getElementById('packingResults').style.display = 'block';
+      
+      // Also send this info to the chatbot
+      addMessage(`I've created a packing list for your trip to ${destination}. Here are some essentials: ${packingData.clothing.slice(0, 3).join(', ')}...`, 'bot');
+      
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error generating packing list. Please try again later.');
+    } finally {
+      searchBtn.innerHTML = originalBtnText;
+      searchBtn.disabled = false;
+    }
+  }, 1500);
+});
+
+// Scroll animations
+const animateOnScroll = () => {
+  const elements = document.querySelectorAll('.feature-card, .benefit-card, .testimonial-card, .step');
+  
+  elements.forEach(element => {
+    const elementPosition = element.getBoundingClientRect().top;
+    const screenPosition = window.innerHeight / 1.2;
+    
+    if (elementPosition < screenPosition) {
+      element.style.opacity = '1';
+      element.style.transform = 'translateY(0)';
+    }
+  });
+};
+
+document.querySelectorAll('.feature-card, .benefit-card, .testimonial-card, .step').forEach(element => {
+  element.style.opacity = '0';
+  element.style.transform = 'translateY(20px)';
+  element.style.transition = 'all 0.5s ease';
+});
+
+window.addEventListener('scroll', animateOnScroll);
+window.addEventListener('load', animateOnScroll);
+</script>
+</body>
+</html>
